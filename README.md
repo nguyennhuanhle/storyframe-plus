@@ -62,6 +62,12 @@ Folder:
 storyframe run "/path/to/video-folder"
 ```
 
+Videos without on-frame story text:
+
+```bash
+storyframe run "https://www.youtube.com/watch?v=VIDEO_ID" --caption-mode force
+```
+
 Nested folders:
 
 ```bash
@@ -123,6 +129,9 @@ storyframe run "https://www.youtube.com/watch?v=VIDEO_ID" \
 # Use browser cookies if YouTube asks for login.
 storyframe run "https://www.youtube.com/watch?v=VIDEO_ID" --cookies-from-browser chrome
 
+# Render transcript captions when the video has no story text on frames.
+storyframe run "https://www.youtube.com/watch?v=VIDEO_ID" --caption-mode force
+
 # Keep raw scanned frames and work files for debugging.
 storyframe run "/path/to/book.mp4" --keep-work
 ```
@@ -142,6 +151,10 @@ storyframe run --advanced-help
 ## Notes
 
 - `strict-complete` is the default quality mode.
+- `--caption-mode off` is the default to protect videos that already have
+  story text on frames.
+- Use `--caption-mode force` for videos with no on-frame story text. Use
+  `--caption-mode auto` only when you want Storyframe to detect that case.
 - YouTube downloads are cached under `<output-root>/_youtube-cache`.
 - This is a local/free pipeline, so CPU usage can be high on long videos.
 - Only process videos you have the right to download, transform, and store.

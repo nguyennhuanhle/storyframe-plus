@@ -4,6 +4,12 @@ import argparse
 from pathlib import Path
 
 from .asr import transcribe_units
+from .captions import (
+    merge_transcript_units_into_sentences,
+    select_caption_frames,
+    should_skip_full_ocr_for_caption_fallback,
+    should_use_caption_fallback,
+)
 from .media import video_duration
 from .page_detection import detect_scene_pages, expand_windows_to_pages
 from .selector import (
@@ -46,6 +52,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--scene-threshold", type=float, default=12.0)
     parser.add_argument("--scene-min-len", type=int, default=8)
+    parser.add_argument("--caption-mode", choices=["off", "auto", "force"], default="off")
     return parser.parse_args()
 
 
@@ -94,6 +101,38 @@ def main() -> None:
         f"page_window_mode={args.page_window_mode}"
     )
 
+    caption_units = merge_transcript_units_into_sentences(
+        filter_units_for_story(units, args.story_start, story_end)
+    )
+    if args.caption_mode == "force":
+        selected = select_caption_frames(args.video, args.work_dir, caption_units)
+        if not selected:
+            raise SystemExit("local found no ASR transcript units for caption rendering")
+        write_outputs(args.output_dir, selected, caption_units, [], pages)
+        print("local: caption-mode=force; using caption-rendered frames")
+        print(f"local selected caption frames: {len(selected)}")
+        print(f"Output: {args.output_dir}")
+        print(f"Contact sheet: {args.output_dir / 'review-contact-sheet.jpg'}")
+        print(f"Index CSV: {args.output_dir / 'review-index.csv'}")
+        return
+
+    if args.caption_mode == "auto" and should_skip_full_ocr_for_caption_fallback(
+        args.video,
+        args.work_dir,
+        args.ocr_backend,
+        caption_units,
+    ):
+        selected = select_caption_frames(args.video, args.work_dir, caption_units)
+        if not selected:
+            raise SystemExit("local found no OCR observations and no ASR transcript units")
+        write_outputs(args.output_dir, selected, caption_units, [], pages)
+        print("local: sampled OCR does not match transcript; using caption-rendered fallback")
+        print(f"local selected caption frames: {len(selected)}")
+        print(f"Output: {args.output_dir}")
+        print(f"Contact sheet: {args.output_dir / 'review-contact-sheet.jpg'}")
+        print(f"Index CSV: {args.output_dir / 'review-index.csv'}")
+        return
+
     observations = collect_observations(
         args.video,
         args.work_dir,
@@ -103,8 +142,16 @@ def main() -> None:
         args.fps,
         args.dense_fps,
     )
-    if not observations:
-        raise SystemExit("local found no OCR observations")
+    if args.caption_mode == "auto" and should_use_caption_fallback(caption_units, observations):
+        selected = select_caption_frames(args.video, args.work_dir, caption_units)
+        if not selected:
+            raise SystemExit("local found no OCR observations and no ASR transcript units")
+        write_outputs(args.output_dir, selected, caption_units, [], pages)
+        print(f"local selected caption frames: {len(selected)}")
+        print(f"Output: {args.output_dir}")
+        print(f"Contact sheet: {args.output_dir / 'review-contact-sheet.jpg'}")
+        print(f"Index CSV: {args.output_dir / 'review-index.csv'}")
+        return
     observations = assign_observation_pages(observations, pages)
     ocr_units = derive_units_from_observations(observations)
 

@@ -74,7 +74,20 @@ class StoryframeAlgorithmTests(unittest.TestCase):
         self.assertEqual(args.asr_backend, "faster-whisper")
         self.assertEqual(args.scan_mode, "dense-windowed")
         self.assertEqual(args.quality, "strict-complete")
+        self.assertEqual(args.caption_mode, "off")
         self.assertEqual(args.page_window_mode, "all-pages")
+
+    def test_caption_mode_can_force_transcript_rendering(self) -> None:
+        args = parse_args(
+            [
+                "run",
+                "https://www.youtube.com/watch?v=example",
+                "--caption-mode",
+                "force",
+            ]
+        )
+
+        self.assertEqual(args.caption_mode, "force")
 
     def test_basic_help_hides_engine_tuning_flags(self) -> None:
         parser = build_parser(show_advanced=False)
@@ -86,6 +99,7 @@ class StoryframeAlgorithmTests(unittest.TestCase):
 
         help_text = output.getvalue()
         self.assertIn("--advanced-help", help_text)
+        self.assertIn("--caption-mode", help_text)
         self.assertNotIn("--asr-backend", help_text)
         self.assertNotIn("--scan-mode", help_text)
 

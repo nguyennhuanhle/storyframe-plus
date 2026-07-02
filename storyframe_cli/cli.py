@@ -144,6 +144,18 @@ def add_common_args(parser: argparse.ArgumentParser, show_advanced: bool = False
         ),
     )
     parser.add_argument(
+        "--caption-mode",
+        choices=["off", "auto", "force"],
+        default="off",
+        help=help_for(
+            (
+                "Render ASR transcript captions onto frames. off is default for videos "
+                "that already have story text; auto detects missing on-frame text; "
+                "force skips OCR and renders captions directly."
+            )
+        ),
+    )
+    parser.add_argument(
         "--story-start",
         type=float,
         default=0.0,
@@ -498,6 +510,8 @@ def run_frame_engine(
         f"{story_end:.3f}",
         "--quality",
         args.quality,
+        "--caption-mode",
+        args.caption_mode,
         "--asr-backend",
         args.asr_backend,
         "--asr-model",

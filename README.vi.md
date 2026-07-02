@@ -62,6 +62,12 @@ Folder:
 storyframe run "/path/to/video-folder"
 ```
 
+Video không có text truyện sẵn trên frame:
+
+```bash
+storyframe run "https://www.youtube.com/watch?v=VIDEO_ID" --caption-mode force
+```
+
 Folder có thư mục con:
 
 ```bash
@@ -123,6 +129,9 @@ storyframe run "https://www.youtube.com/watch?v=VIDEO_ID" \
 # Dùng browser cookies nếu YouTube yêu cầu login.
 storyframe run "https://www.youtube.com/watch?v=VIDEO_ID" --cookies-from-browser chrome
 
+# Render transcript caption khi video không có text truyện sẵn trên frame.
+storyframe run "https://www.youtube.com/watch?v=VIDEO_ID" --caption-mode force
+
 # Giữ raw scanned frames và work files để debug.
 storyframe run "/path/to/book.mp4" --keep-work
 ```
@@ -142,6 +151,10 @@ storyframe run --advanced-help
 ## Ghi Chú
 
 - `strict-complete` là quality mode mặc định.
+- `--caption-mode off` là mặc định để tránh ảnh hưởng video đã có text truyện
+  sẵn trên frame.
+- Dùng `--caption-mode force` cho video không có text truyện sẵn trên frame.
+  Chỉ dùng `--caption-mode auto` khi muốn Storyframe tự detect case đó.
 - Video YouTube được cache tại `<output-root>/_youtube-cache`.
 - Pipeline chạy local/free nên CPU có thể cao với video dài.
 - Chỉ xử lý video mà bạn có quyền download, transform, và lưu trữ.

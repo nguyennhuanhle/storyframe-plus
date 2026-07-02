@@ -13,6 +13,7 @@ from .media import extract_frame, scan_fps, timestamps_for_window
 from .models import FrameObservation, OcrBox, PageInterval, SelectedFrame, TranscriptUnit
 from .ocr import build_ocr_backend
 from .ocr_filter import split_story_and_ad_boxes
+from .captions import render_caption_if_needed
 from .text import clean_text, corrected_text_with_reference, extra_token_ratio, has_reject_phrase, similarity, target_coverage, token_set
 
 
@@ -875,6 +876,8 @@ def write_outputs(
                 if item.output_source == "original"
                 else f"{item.output_source}+text-reconstructed"
             )
+        if render_caption_if_needed(dest, item):
+            item.output_source = "caption-rendered"
         rows.append(
             {
                 "index": str(index),

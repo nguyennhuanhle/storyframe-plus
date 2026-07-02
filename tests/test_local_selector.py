@@ -1,9 +1,18 @@
 from __future__ import annotations
 
+import tempfile
 import unittest
 
 from pathlib import Path
 
+from PIL import Image
+
+from storyframe_cli.local.captions import (
+    merge_transcript_units_into_sentences,
+    render_caption_if_needed,
+    sample_transcript_units,
+    should_use_caption_fallback,
+)
 from storyframe_cli.local.models import FrameObservation, OcrBox, PageInterval, SelectedFrame, TranscriptUnit
 from storyframe_cli.local.selector import (
     coalesce_same_frame_page_selections,
@@ -43,7 +52,76 @@ def unit(unit_id: str, start: float, end: float, text: str, source: str = "asr")
     )
 
 
+def observation(timestamp: float, text: str) -> FrameObservation:
+    normalized = clean_text(text)
+    return FrameObservation(
+        frame_path="frame.jpg",
+        timestamp=timestamp,
+        text=text,
+        normalized_text=normalized,
+        boxes=[],
+        avg_confidence=0.95,
+        avg_ink_score=0.90,
+        word_count=len(normalized.split()),
+    )
+
+
 class LocalSelectorTests(unittest.TestCase):
+    def test_asr_fragments_are_merged_into_complete_caption_sentence(self) -> None:
+        merged = merge_transcript_units_into_sentences(
+            [
+                unit("asr-0001", 1.0, 2.0, "Barry looked up"),
+                unit("asr-0002", 2.3, 3.0, "at the huge tree"),
+                unit("asr-0003", 3.2, 4.0, "and smiled."),
+            ]
+        )
+
+        self.assertEqual(len(merged), 1)
+        self.assertEqual(merged[0].text, "Barry looked up at the huge tree and smiled.")
+        self.assertEqual(merged[0].normalized_text, "barry looked up at the huge tree and smiled")
+        self.assertEqual(merged[0].source, "asr-caption")
+
+    def test_caption_render_writes_transcript_onto_frame(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            frame_path = Path(temp_dir) / "frame.jpg"
+            Image.new("RGB", (640, 360), (120, 150, 180)).save(frame_path, quality=92)
+            before = frame_path.read_bytes()
+            item = selected("caption-0001", 2.0, "Barry looked up at the huge tree and smiled.")
+            item.frame_path = str(frame_path)
+            item.output_source = "caption-rendered"
+
+            changed = render_caption_if_needed(frame_path, item)
+
+            self.assertTrue(changed)
+            self.assertNotEqual(frame_path.read_bytes(), before)
+            self.assertEqual(item.normalized_text, "barry looked up at the huge tree and smiled")
+
+    def test_caption_fallback_triggers_when_ocr_does_not_match_transcript(self) -> None:
+        units = [
+            unit("asr-0001", 1.0, 2.0, "Barry looked up at the huge tree and smiled."),
+        ]
+        observations = [observation(1.5, "subscribe now")]
+
+        self.assertTrue(should_use_caption_fallback(units, observations))
+
+    def test_caption_fallback_stays_off_when_ocr_matches_transcript(self) -> None:
+        units = [
+            unit("asr-0001", 1.0, 2.0, "Barry looked up at the huge tree and smiled."),
+        ]
+        observations = [observation(1.5, "Barry looked up at the huge tree and smiled.")]
+
+        self.assertFalse(should_use_caption_fallback(units, observations))
+
+    def test_caption_ocr_sample_units_are_spread_across_transcript(self) -> None:
+        units = [
+            unit(f"asr-{index:04d}", float(index), float(index + 1), f"Sentence number {index}.")
+            for index in range(10)
+        ]
+
+        sampled = sample_transcript_units(units, 4)
+
+        self.assertEqual([item.unit_id for item in sampled], ["asr-0000", "asr-0003", "asr-0006", "asr-0009"])
+
     def test_repeated_text_far_apart_is_preserved(self) -> None:
         items = [
             selected("asr-0001", 10.0, "I am not scared."),
