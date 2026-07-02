@@ -1,20 +1,15 @@
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
 
 def add_local_dependency_paths() -> None:
-    here = Path(__file__).resolve()
-    workspace_root = here.parents[4]
-    candidates = [
-        workspace_root / "work" / ".deps" / "storyframe-local",
-        workspace_root / "work" / ".deps" / "storyframe-local-v2",
-        Path.cwd() / "work" / ".deps" / "storyframe-local",
-        Path.cwd() / "work" / ".deps" / "storyframe-local-v2",
-        workspace_root / "outputs" / "storyframe-cli" / "work" / ".deps" / "storyframe-local",
-        workspace_root / "outputs" / "storyframe-cli" / "work" / ".deps" / "storyframe-local-v2",
-    ]
-    for candidate in candidates:
+    raw_value = os.environ.get("STORYFRAME_LOCAL_DEPS_DIR", "")
+    for raw_path in raw_value.split(os.pathsep):
+        if not raw_path:
+            continue
+        candidate = Path(raw_path).expanduser()
         if candidate.exists():
             sys.path.insert(0, str(candidate))

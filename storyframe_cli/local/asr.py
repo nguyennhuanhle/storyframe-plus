@@ -27,7 +27,7 @@ def transcribe_units(
         from faster_whisper import WhisperModel
     except Exception as exc:  # pragma: no cover - runtime dependency message.
         raise RuntimeError(
-            "faster-whisper is missing. Install local deps into work/.deps/storyframe-local."
+            "faster-whisper is missing. Install with: python3 -m pip install -e '.[local]'"
         ) from exc
 
     audio_path = work_dir / "audio" / "story.wav"
@@ -57,4 +57,3 @@ def transcribe_units(
             )
         )
     return units
-

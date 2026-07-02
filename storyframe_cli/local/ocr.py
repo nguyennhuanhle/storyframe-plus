@@ -59,7 +59,7 @@ class RapidOcrBackend:
             from rapidocr import RapidOCR
         except Exception as exc:  # pragma: no cover - runtime dependency message.
             raise RuntimeError(
-                "rapidocr is missing. Install local deps into work/.deps/storyframe-local."
+                "rapidocr is missing. Install with: python3 -m pip install -e '.[local]'"
             ) from exc
         self._engine = RapidOCR()
 

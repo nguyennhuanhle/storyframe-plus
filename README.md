@@ -26,19 +26,15 @@ actual text is rendered on the video frames.
 
 The default run already uses the recommended local pipeline:
 
-- `local` engine
 - `strict-complete` quality
 - `dense-windowed` OCR scan
 - `faster-whisper` ASR
 - `rapidocr` OCR
 - scene/page detection with `all-pages`
 
-Older commands that use `--engine local-v2` still work as a deprecated alias,
-but new scripts should use `--engine local`.
-
 ## How It Works
 
-`local` combines four local signals:
+The extraction pipeline combines four local signals:
 
 1. ASR timing from `faster-whisper`
 2. OCR observations from `rapidocr` / ONNX Runtime
@@ -73,14 +69,8 @@ cd storyframe-cli
 python3 -m pip install -e ".[local]"
 ```
 
-For this workspace, local dependencies can be installed into:
-
-```text
-/Users/thieunv/Documents/Codex/2026-07-01/pha/work/.deps/storyframe-local
-```
-
-The runtime also checks the older `storyframe-local-v2` dependency directory for
-backward compatibility, so existing local installs do not need to be recreated.
+The `local` extra installs the OCR, ASR, and scene-detection dependencies used
+by the default pipeline.
 
 ## Basic Usage
 
@@ -134,7 +124,7 @@ storyframe run "/path/to/book.mp4" --keep-work
 ```
 
 Run `storyframe run --help` for basic options.
-Run `storyframe run --advanced-help` for engine/OCR/ASR tuning flags.
+Run `storyframe run --advanced-help` for OCR/ASR tuning flags.
 
 ## Output Layout
 
@@ -343,12 +333,6 @@ Install editable package or set `PYTHONPATH`:
 
 ```bash
 python3 -m pip install -e ".[local]"
-```
-
-The old extra name still works as a compatibility alias:
-
-```bash
-python3 -m pip install -e ".[local-v2]"
 ```
 
 `yt-dlp` fails

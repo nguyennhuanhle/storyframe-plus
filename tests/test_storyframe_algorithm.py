@@ -9,7 +9,7 @@ from types import SimpleNamespace
 
 from PIL import Image
 
-from storyframe_cli.cli import build_parser, normalize_engine, parse_args
+from storyframe_cli.cli import build_parser, parse_args
 from storyframe_cli.extract_story_transcript_frames import (
     FrameCandidate,
     TextItem,
@@ -71,16 +71,10 @@ class StoryframeAlgorithmTests(unittest.TestCase):
     def test_run_defaults_use_generic_local_pipeline(self) -> None:
         args = parse_args(["run", "https://www.youtube.com/watch?v=example"])
 
-        self.assertEqual(args.engine, "local")
         self.assertEqual(args.asr_backend, "faster-whisper")
         self.assertEqual(args.scan_mode, "dense-windowed")
         self.assertEqual(args.quality, "strict-complete")
         self.assertEqual(args.page_window_mode, "all-pages")
-
-    def test_deprecated_engine_name_is_backward_compatible_alias(self) -> None:
-        self.assertEqual(normalize_engine("local-v2"), "local")
-        self.assertEqual(normalize_engine("local"), "local")
-        self.assertEqual(normalize_engine("legacy"), "legacy")
 
     def test_basic_help_hides_engine_tuning_flags(self) -> None:
         parser = build_parser(show_advanced=False)
@@ -92,11 +86,10 @@ class StoryframeAlgorithmTests(unittest.TestCase):
 
         help_text = output.getvalue()
         self.assertIn("--advanced-help", help_text)
-        self.assertNotIn("--engine", help_text)
         self.assertNotIn("--asr-backend", help_text)
         self.assertNotIn("--scan-mode", help_text)
 
-    def test_advanced_help_shows_engine_tuning_flags(self) -> None:
+    def test_advanced_help_shows_ocr_asr_tuning_flags(self) -> None:
         parser = build_parser(show_advanced=True)
         output = io.StringIO()
 
@@ -105,7 +98,6 @@ class StoryframeAlgorithmTests(unittest.TestCase):
                 parser.parse_args(["run", "--help"])
 
         help_text = output.getvalue()
-        self.assertIn("--engine", help_text)
         self.assertIn("--asr-backend", help_text)
         self.assertIn("--scan-mode", help_text)
 

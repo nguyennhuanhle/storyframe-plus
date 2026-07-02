@@ -53,9 +53,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         raw_args = ["--help" if arg == "--advanced-help" else arg for arg in raw_args]
 
     parser = build_parser(show_advanced=show_advanced)
-    args = parser.parse_args(raw_args)
-    args.engine = normalize_engine(args.engine)
-    return args
+    return parser.parse_args(raw_args)
 
 
 def build_parser(show_advanced: bool = False) -> argparse.ArgumentParser:
@@ -81,16 +79,10 @@ def build_parser(show_advanced: bool = False) -> argparse.ArgumentParser:
         run_parser.add_argument(
             "--advanced-help",
             action="store_true",
-            help="Show all engine, OCR, ASR, and tuning flags.",
+            help="Show all OCR, ASR, and tuning flags.",
         )
     add_common_args(run_parser, show_advanced=show_advanced)
     return parser
-
-
-def normalize_engine(engine: str) -> str:
-    if engine == "local-v2":
-        return "local"
-    return engine
 
 
 def add_common_args(parser: argparse.ArgumentParser, show_advanced: bool = False) -> None:
@@ -110,21 +102,6 @@ def add_common_args(parser: argparse.ArgumentParser, show_advanced: bool = False
         type=Path,
         default=None,
         help=help_for("Root directory for temporary downloads/work files.", advanced=True),
-    )
-    parser.add_argument(
-        "--engine-script",
-        type=Path,
-        default=Path(__file__).with_name("extract_story_transcript_frames.py"),
-        help=help_for("Path to the frame extraction engine script.", advanced=True),
-    )
-    parser.add_argument(
-        "--engine",
-        choices=["legacy", "local", "local-v2"],
-        default="local",
-        help=help_for(
-            "Frame extraction engine. 'local-v2' is accepted as a deprecated alias for 'local'.",
-            advanced=True,
-        ),
     )
     parser.add_argument(
         "--recursive",
@@ -244,26 +221,7 @@ def add_common_args(parser: argparse.ArgumentParser, show_advanced: bool = False
     parser.add_argument(
         "--keep-work",
         action="store_true",
-        help=help_for("Keep temporary engine work directories."),
-    )
-    parser.add_argument(
-        "--no-polish-transcripts",
-        dest="polish_transcripts",
-        action="store_false",
-        help=help_for(
-            "Disable final high-confidence OCR transcript cleanup after frame selection.",
-            advanced=True,
-        ),
-    )
-    parser.set_defaults(polish_transcripts=True)
-    parser.add_argument(
-        "--transcript-polish-min-conf",
-        type=float,
-        default=0.80,
-        help=help_for(
-            "Minimum Tesseract confidence for transcript cleanup, 0.0-1.0.",
-            advanced=True,
-        ),
+        help=help_for("Keep temporary work directories."),
     )
     parser.add_argument(
         "--asr-backend",
@@ -312,14 +270,6 @@ def add_common_args(parser: argparse.ArgumentParser, show_advanced: bool = False
         default=8,
         help=help_for("Minimum scene length in frames for local page detection.", advanced=True),
     )
-    parser.add_argument(
-        "--keep-downloaded-video",
-        action="store_true",
-        help=help_for(
-            "Deprecated: YouTube downloads are cached by default. Kept for compatibility.",
-            advanced=True,
-        ),
-    )
 
 
 def fail(message: str) -> None:
@@ -348,9 +298,7 @@ def run_command(cmd: list[str], cwd: Path | None = None) -> subprocess.Completed
 
 
 def ensure_system_dependencies(args: argparse.Namespace) -> None:
-    required = ["ffmpeg", "ffprobe"]
-    if args.engine in {"legacy", "local"}:
-        required.append("tesseract")
+    required = ["ffmpeg", "ffprobe", "tesseract"]
     missing = [tool for tool in required if shutil.which(tool) is None]
     if missing:
         fail("Missing system dependency: " + ", ".join(missing))
@@ -529,54 +477,10 @@ def run_frame_engine(
     args: argparse.Namespace,
     story_end: float,
 ) -> None:
-    if args.engine == "local":
-        cmd = [
-            sys.executable,
-            "-m",
-            "storyframe_cli.local.engine",
-            str(video_path),
-            "--output-dir",
-            str(output_dir),
-            "--work-dir",
-            str(work_dir),
-            "--fps",
-            str(args.fps),
-            "--scan-mode",
-            args.scan_mode,
-            "--dense-fps",
-            str(args.dense_fps),
-            "--story-start",
-            f"{args.story_start:.3f}",
-            "--story-end",
-            f"{story_end:.3f}",
-            "--quality",
-            args.quality,
-            "--asr-backend",
-            args.asr_backend,
-            "--asr-model",
-            args.asr_model,
-            "--ocr-backend",
-            args.ocr_backend,
-            "--window-padding",
-            str(args.window_padding),
-            "--page-detection",
-            args.page_detection,
-            "--page-window-mode",
-            args.page_window_mode,
-            "--scene-threshold",
-            str(args.scene_threshold),
-            "--scene-min-len",
-            str(args.scene_min_len),
-        ]
-        proc = subprocess.run(cmd, text=True)
-        if proc.returncode != 0:
-            raise RuntimeError(f"local frame extraction failed for {video_path}")
-        return
-
-    legacy_scan_mode = args.scan_mode.replace("-windowed", "")
     cmd = [
         sys.executable,
-        str(args.engine_script),
+        "-m",
+        "storyframe_cli.local.engine",
         str(video_path),
         "--output-dir",
         str(output_dir),
@@ -585,7 +489,7 @@ def run_frame_engine(
         "--fps",
         str(args.fps),
         "--scan-mode",
-        legacy_scan_mode,
+        args.scan_mode,
         "--dense-fps",
         str(args.dense_fps),
         "--story-start",
@@ -594,19 +498,23 @@ def run_frame_engine(
         f"{story_end:.3f}",
         "--quality",
         args.quality,
-        "--transcript-polish-min-conf",
-        f"{args.transcript_polish_min_conf:.3f}",
+        "--asr-backend",
+        args.asr_backend,
+        "--asr-model",
+        args.asr_model,
+        "--ocr-backend",
+        args.ocr_backend,
+        "--window-padding",
+        str(args.window_padding),
+        "--page-detection",
+        args.page_detection,
+        "--page-window-mode",
+        args.page_window_mode,
+        "--scene-threshold",
+        str(args.scene_threshold),
+        "--scene-min-len",
+        str(args.scene_min_len),
     ]
-    if not args.polish_transcripts:
-        cmd.append("--no-polish-transcripts")
-    if args.include_title_intro:
-        cmd += [
-            "--include-title-intro",
-            "--title-start",
-            f"{args.title_start:.3f}",
-            "--title-end",
-            f"{args.title_end:.3f}",
-        ]
     proc = subprocess.run(cmd, text=True)
     if proc.returncode != 0:
         raise RuntimeError(f"Frame extraction failed for {video_path}")
@@ -711,8 +619,6 @@ def main() -> None:
     if args.command != "run":
         fail("Only the 'run' command is currently supported.")
     ensure_system_dependencies(args)
-    if args.engine == "legacy" and not args.engine_script.exists():
-        fail(f"Engine script not found: {args.engine_script}")
 
     output_root = args.output_root.expanduser().resolve()
     work_root = (args.work_root or (output_root / "_work")).expanduser().resolve()

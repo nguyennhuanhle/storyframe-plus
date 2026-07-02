@@ -26,19 +26,15 @@ trực tiếp trên frame video.
 
 Lệnh mặc định đã dùng pipeline local khuyến nghị:
 
-- engine `local`
 - quality `strict-complete`
 - OCR scan `dense-windowed`
 - ASR `faster-whisper`
 - OCR `rapidocr`
 - scene/page detection với `all-pages`
 
-Các command cũ dùng `--engine local-v2` vẫn chạy vì được map sang `local`, nhưng
-script mới nên dùng `--engine local`.
-
 ## Cách Hoạt Động
 
-Engine `local` kết hợp bốn tín hiệu local:
+Pipeline extract kết hợp bốn tín hiệu local:
 
 1. ASR timing từ `faster-whisper`
 2. OCR observations từ `rapidocr` / ONNX Runtime
@@ -73,14 +69,8 @@ cd storyframe-cli
 python3 -m pip install -e ".[local]"
 ```
 
-Trong workspace này, local dependencies có thể được cài vào:
-
-```text
-/Users/thieunv/Documents/Codex/2026-07-01/pha/work/.deps/storyframe-local
-```
-
-Runtime vẫn check thêm thư mục cũ `storyframe-local-v2` để backward compatible,
-nên install local cũ không cần tạo lại.
+Extra `local` sẽ cài các dependencies OCR, ASR, và scene detection mà pipeline mặc
+định cần dùng.
 
 ## Basic Usage
 
@@ -134,7 +124,7 @@ storyframe run "/path/to/book.mp4" --keep-work
 ```
 
 Chạy `storyframe run --help` để xem basic options.
-Chạy `storyframe run --advanced-help` để xem engine/OCR/ASR tuning flags.
+Chạy `storyframe run --advanced-help` để xem OCR/ASR tuning flags.
 
 ## Output Layout
 
@@ -341,12 +331,6 @@ Cài editable package hoặc set `PYTHONPATH`:
 
 ```bash
 python3 -m pip install -e ".[local]"
-```
-
-Tên extra cũ vẫn chạy như compatibility alias:
-
-```bash
-python3 -m pip install -e ".[local-v2]"
 ```
 
 `yt-dlp` fail
