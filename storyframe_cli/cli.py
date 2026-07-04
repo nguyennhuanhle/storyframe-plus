@@ -74,6 +74,24 @@ def build_parser(show_advanced: bool = False) -> argparse.ArgumentParser:
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
+    gui_parser = subparsers.add_parser(
+        "gui",
+        help="Start the local web interface.",
+    )
+    gui_parser.add_argument("--host", default="127.0.0.1")
+    gui_parser.add_argument("--port", type=int, default=8765)
+    gui_parser.add_argument(
+        "--output-root",
+        type=Path,
+        default=Path.cwd() / "outputs" / "storyframe-runs",
+        help="Root directory for per-video outputs.",
+    )
+    gui_parser.add_argument(
+        "--no-browser",
+        action="store_true",
+        help="Do not open the browser automatically.",
+    )
+
     run_parser = subparsers.add_parser(
         "run",
         help="Process URL(s), local video file(s), and/or folder(s).",
@@ -329,7 +347,7 @@ def run_command(cmd: list[str], cwd: Path | None = None) -> subprocess.Completed
 
 
 def ensure_system_dependencies(args: argparse.Namespace) -> None:
-    required = ["ffmpeg", "ffprobe", "tesseract"]
+    required = ["ffmpeg", "ffprobe"]
     missing = [tool for tool in required if shutil.which(tool) is None]
     if missing:
         fail("Missing system dependency: " + ", ".join(missing))
@@ -749,10 +767,37 @@ def process_video(
     return result
 
 
+def reconfigure_stdio_utf8() -> None:
+    # YouTube titles routinely contain characters that Windows cp1252 pipes
+    # cannot encode; without this every print of such a path kills the job.
+    for stream in (sys.stdout, sys.stderr):
+        if stream is not None and hasattr(stream, "reconfigure"):
+            try:
+                stream.reconfigure(encoding="utf-8", errors="replace")
+            except (OSError, ValueError):
+                pass
+
+
 def main() -> None:
+    reconfigure_stdio_utf8()
     args = parse_args()
+    if args.command == "gui":
+        try:
+            from .gui.server import serve
+        except ImportError:
+            fail(
+                "GUI dependencies are missing. Install with: "
+                "python -m pip install -e '.[local,gui]'"
+            )
+        serve(
+            host=args.host,
+            port=args.port,
+            output_root=args.output_root.expanduser().resolve(),
+            open_browser=not args.no_browser,
+        )
+        return
     if args.command != "run":
-        fail("Only the 'run' command is currently supported.")
+        fail("Only the 'run' and 'gui' commands are currently supported.")
     ensure_system_dependencies(args)
 
     output_root = args.output_root.expanduser().resolve()

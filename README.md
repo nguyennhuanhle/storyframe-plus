@@ -1,12 +1,18 @@
-# Storyframe CLI
+# Storyframe Plus
 
 [Tiếng Việt](README.vi.md)
 
-Extract clean story-text frames from read-aloud videos, export the story audio
-as MP3, and package the selected images into a PDF.
+Turn read-aloud story videos into a **PDF picture book** and an **MP3** of the
+narration — entirely on your own machine. Storyframe Plus extracts clean
+story-text frames from a video, exports the narration audio as MP3, and packages
+the selected images into a PDF.
+
+> This is a fork of [storyframe-cli](https://github.com/thieung/storyframe-cli)
+> that adds a friendly local **web GUI** for non-technical users, first-class
+> **Windows** support, a one-click launcher, and several reliability fixes.
 
 <p align="center">
-  <img src="docs/assets/storyframe-cli-overview.png" alt="Storyframe CLI overview" width="720">
+  <img src="docs/assets/storyframe-cli-overview.png" alt="Storyframe overview" width="720">
 </p>
 
 Supports:
@@ -19,46 +25,84 @@ Supports:
 
 | Platform | Status |
 | --- | --- |
+| Windows | Supported. Use `start.bat` for one-click setup. |
 | macOS | Supported and tested. |
 | Linux | Supported if system packages are installed. |
-| Windows | Not directly tested; use WSL2/Linux. |
 
-## Install
+## Quick start (Windows)
 
-macOS system packages:
+1. Download this repository (green **Code** button → **Download ZIP**, then
+   unzip) or clone it.
+2. Double-click **`start.bat`**.
+3. Wait for the first-run setup to finish — the app then opens in your browser.
+
+On the first run the launcher installs everything it needs automatically —
+Python (if missing), the Python libraries, `ffmpeg`, and `deno` (used for
+YouTube downloads) — via `winget`. Re-run `start.bat` any time to open the app;
+pass `-Update` to upgrade dependencies. The AI speech model (~0.5&nbsp;GB)
+downloads the first time you process a video.
+
+## Manual install (any platform)
+
+System tools:
 
 ```bash
-brew install ffmpeg tesseract
+# Windows
+winget install Gyan.FFmpeg DenoLand.Deno
+# macOS
+brew install ffmpeg
+# Linux
+sudo apt-get install ffmpeg
 ```
 
-Linux system packages:
-
-```bash
-sudo apt-get install ffmpeg tesseract-ocr
-```
+`ffmpeg` is required. `deno` (or another yt-dlp JS runtime) is required for
+YouTube downloads. `tesseract` is optional — it is only used as an OCR fallback.
 
 Clone and install:
 
 ```bash
-git clone https://github.com/thieung/storyframe-cli.git
-cd storyframe-cli
+git clone https://github.com/nguyennhuanhle/storyframe-plus.git
+cd storyframe-plus
 python3 -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
 python -m pip install -U pip
-python -m pip install -e ".[local]"
+python -m pip install -e ".[local,gui]"
 ```
 
 Python 3.11+ is required.
 
-Python dependencies installed by `.[local]`:
+Python dependencies:
 
 - base: `liteparse`, `numpy`, `opencv-python-headless`, `pillow`, `yt-dlp`
-- local pipeline: `faster-whisper`, `imagehash`, `pytesseract`, `rapidocr`,
-  `rapidfuzz`, `scenedetect`, `scikit-image`
+- local pipeline (`local`): `faster-whisper`, `imagehash`, `pytesseract`,
+  `rapidocr`, `rapidfuzz`, `scenedetect`, `scikit-image`
+- web GUI (`gui`): `fastapi`, `uvicorn`, `python-multipart`
 
 `faster-whisper` downloads the selected ASR model on first use.
 
-## Usage
+## Web GUI
+
+Start the local web interface:
+
+```bash
+storyframe gui
+```
+
+The browser opens at `http://127.0.0.1:8765`. From there you can:
+
+- Paste a YouTube link or pick a local video, and start processing.
+- Watch friendly per-stage progress, and cancel a running job.
+- Listen to the MP3, then open or download the PDF when it is ready.
+- Review the pages: frames flagged **needs review** are outlined; remove or
+  restore pages and rebuild the PDF in seconds.
+- Delete a project (also removes its files from disk).
+- Open the built-in user guide (**Hướng dẫn sử dụng**).
+
+Everything runs locally; jobs and outputs persist under
+`outputs/storyframe-runs`. The interface is in Vietnamese, aimed at
+non-technical users.
+
+## Command line
 
 YouTube:
 
@@ -220,4 +264,5 @@ storyframe run --advanced-help
 ```bash
 python3 -m unittest discover -s tests
 python3 -m storyframe_cli run "https://www.youtube.com/watch?v=VIDEO_ID"
+python3 -m storyframe_cli gui
 ```

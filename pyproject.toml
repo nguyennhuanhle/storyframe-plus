@@ -3,9 +3,9 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "storyframe-cli"
-version = "0.1.0"
-description = "Extract stable story transcript frames, audio MP3, and image PDF from local videos or YouTube URLs."
+name = "storyframe-plus"
+version = "0.2.0"
+description = "Extract story transcript frames, audio MP3, and image PDF from local videos or YouTube URLs, via a CLI or a local web GUI."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
@@ -17,6 +17,11 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+gui = [
+  "fastapi>=0.110",
+  "uvicorn[standard]>=0.29",
+  "python-multipart>=0.0.9",
+]
 local = [
   "faster-whisper>=1.2",
   "imagehash>=4.3",
@@ -35,3 +40,4 @@ include = ["storyframe_cli*"]
 
 [tool.setuptools.package-data]
 storyframe_cli = ["extract_story_transcript_frames.py"]
+"storyframe_cli.gui" = ["static/*"]

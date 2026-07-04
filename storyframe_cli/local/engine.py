@@ -69,6 +69,9 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    from ..cli import reconfigure_stdio_utf8
+
+    reconfigure_stdio_utf8()
     args = parse_args()
     if not args.video.exists():
         raise SystemExit(f"Input video does not exist: {args.video}")

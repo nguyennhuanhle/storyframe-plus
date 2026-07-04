@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Storyframe — Tách truyện từ video</title>
+<link rel="stylesheet" href="/static/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📖</text></svg>">
+</head>
+<body>
+
+<div class="decor" aria-hidden="true">
+  <svg class="cloud c1" viewBox="0 0 120 60"><ellipse cx="35" cy="38" rx="30" ry="20"/><ellipse cx="65" cy="30" rx="28" ry="24"/><ellipse cx="90" cy="40" rx="24" ry="18"/><rect x="20" y="40" width="80" height="18" rx="9"/></svg>
+  <svg class="cloud c2" viewBox="0 0 120 60"><ellipse cx="35" cy="38" rx="30" ry="20"/><ellipse cx="65" cy="30" rx="28" ry="24"/><ellipse cx="90" cy="40" rx="24" ry="18"/><rect x="20" y="40" width="80" height="18" rx="9"/></svg>
+  <svg class="cloud c3" viewBox="0 0 120 60"><ellipse cx="35" cy="38" rx="30" ry="20"/><ellipse cx="65" cy="30" rx="28" ry="24"/><ellipse cx="90" cy="40" rx="24" ry="18"/><rect x="20" y="40" width="80" height="18" rx="9"/></svg>
+  <svg class="star s1" viewBox="0 0 24 24"><path d="M12 2l2.9 6.3L22 9.3l-5 4.8 1.2 6.9L12 17.8 5.8 21l1.2-6.9-5-4.8 7.1-1z"/></svg>
+  <svg class="star s2" viewBox="0 0 24 24"><path d="M12 2l2.9 6.3L22 9.3l-5 4.8 1.2 6.9L12 17.8 5.8 21l1.2-6.9-5-4.8 7.1-1z"/></svg>
+  <svg class="star s3" viewBox="0 0 24 24"><path d="M12 2l2.9 6.3L22 9.3l-5 4.8 1.2 6.9L12 17.8 5.8 21l1.2-6.9-5-4.8 7.1-1z"/></svg>
+  <svg class="star s4" viewBox="0 0 24 24"><path d="M12 2l2.9 6.3L22 9.3l-5 4.8 1.2 6.9L12 17.8 5.8 21l1.2-6.9-5-4.8 7.1-1z"/></svg>
+</div>
+
+<header>
+  <div class="header-inner">
+    <div class="logo-lockup">
+      <div class="logo-mark">
+        <svg viewBox="0 0 48 48"><path d="M24 12c-4-3-9-3.5-14-2v26c5-1.5 10-1 14 2 4-3 9-3.5 14-2V10c-5-1.5-10-1-14 2z" fill="#fff" opacity=".95"/><path d="M24 12v28" stroke="#c9b8ff" stroke-width="2" stroke-linecap="round"/><path d="M31 6l1.8 3.8L37 10.4l-3 2.9.8 4.2L31 15.6 27.2 17.5l.8-4.2-3-2.9 4.2-.6z" fill="#ffd84d"/></svg>
+      </div>
+      <h1>Storyframe</h1>
+    </div>
+    <p class="tagline">Biến video đọc truyện thành sách PDF + file nghe MP3 — mọi thứ chạy trên máy của bạn</p>
+    <div class="header-actions">
+      <button id="guide-btn" class="guide-btn">📖 Hướng dẫn sử dụng</button>
+    </div>
+    <div id="system-banner" class="hidden"></div>
+  </div>
+</header>
+
+<main>
+  <section class="card new-job">
+    <h2><span class="h2-icon">☁️</span> Thêm video mới</h2>
+
+    <div class="source-row">
+      <div class="input-wrap">
+        <span class="input-icon">🔗</span>
+        <input id="source-input" type="text"
+               placeholder="Dán link YouTube vào đây..." autocomplete="off">
+      </div>
+      <span class="or-text">hoặc</span>
+      <button id="upload-btn" class="btn-file" title="Chọn file video trên máy">
+        <span>📁</span> Chọn file
+      </button>
+      <input id="file-input" type="file" accept="video/*,.mkv,.webm,.avi,.m4v,.mov,.mpg,.mpeg" hidden>
+    </div>
+    <div id="upload-status" class="hint hidden"></div>
+
+    <div class="options-row">
+      <label class="option">
+        <span>Chữ truyện trên màn hình?</span>
+        <select id="caption-mode">
+          <option value="off" selected>Video CÓ chữ trên màn hình</option>
+          <option value="force">Video KHÔNG có chữ (tự tạo phụ đề)</option>
+          <option value="auto">Không chắc — tự phát hiện</option>
+        </select>
+      </label>
+      <label class="option toggle">
+        <input id="fast-mode" type="checkbox" checked>
+        <span class="toggle-text">
+          <b>Chế độ nhanh</b>
+          <small>(khuyên dùng — tận dụng phụ đề YouTube và bộ nhớ đệm)</small>
+        </span>
+      </label>
+    </div>
+
+    <details class="advanced">
+      <summary><span class="gear">⚙️</span> Cài đặt nâng cao</summary>
+      <div class="options-row">
+        <label class="option">
+          <span>Lấy cookies từ trình duyệt <small>(khi YouTube đòi đăng nhập)</small></span>
+          <select id="cookies-browser">
+            <option value="" selected>Không dùng</option>
+            <option value="chrome">Chrome</option>
+            <option value="edge">Edge</option>
+            <option value="firefox">Firefox</option>
+          </select>
+        </label>
+        <label class="option toggle">
+          <input id="keep-work" type="checkbox">
+          <span class="toggle-text"><b>Giữ file tạm để gỡ lỗi</b></span>
+        </label>
+      </div>
+    </details>
+
+    <button id="start-btn" class="btn-start">
+      <span class="start-star">⭐</span>
+      <span>Bắt đầu xử lý</span>
+      <span class="start-rocket">🚀</span>
+    </button>
+    <div id="submit-error" class="error-box hidden"></div>
+  </section>
+
+  <section id="jobs-section">
+    <h2 id="jobs-heading" class="hidden"><span class="h2-icon">📋</span> Danh sách xử lý</h2>
+    <div id="jobs-list"></div>
+  </section>
+</main>
+
+<footer>
+  <p>Chỉ xử lý video mà bạn có quyền tải và sử dụng. Toàn bộ dữ liệu được xử lý ngay trên máy này.</p>
+</footer>
+
+<div id="guide-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>📖 Hướng dẫn sử dụng Storyframe</h2>
+      <button id="guide-close" class="modal-close" title="Đóng">✕</button>
+    </div>
+    <div class="guide-content">
+
+      <h3>1. Storyframe là gì?</h3>
+      <p>Storyframe biến video đọc truyện (ví dụ video đọc sách thiếu nhi trên YouTube) thành:</p>
+      <ul>
+        <li>một file <b>PDF</b> gồm các trang truyện (ảnh từng trang có chữ),</li>
+        <li>một file <b>MP3</b> chứa giọng đọc.</li>
+      </ul>
+      <div class="callout ok">🔒 Mọi thứ được xử lý ngay trên máy của bạn. Không có dữ liệu nào bị gửi lên mạng, trừ khi bạn tải video từ YouTube.</div>
+
+      <h3>2. Cài đặt (chỉ làm một lần)</h3>
+      <p>Yêu cầu: máy Windows 10 hoặc 11. Bạn <b>không cần cài gì thủ công</b> — chỉ cần:</p>
+      <ol>
+        <li>Tải thư mục ứng dụng Storyframe về máy và mở nó.</li>
+        <li>Nhấp đúp vào file <code>start.bat</code>.</li>
+        <li>Chờ ứng dụng chuẩn bị xong (lần đầu mất vài phút), sau đó dùng được ngay.</li>
+      </ol>
+      <p>Lần chạy đầu tiên, ứng dụng <b>tự động</b> cài mọi thứ cần thiết:</p>
+      <ul>
+        <li><b>Python</b> (nếu máy chưa có) và các thư viện cần thiết.</li>
+        <li><code>ffmpeg</code> và <code>deno</code> — công cụ xử lý video và tải YouTube.</li>
+        <li>Tải model AI nghe giọng nói (khoảng 0.5&nbsp;GB) khi bạn xử lý video đầu tiên.</li>
+      </ul>
+      <div class="callout">💡 Một cửa sổ nền đen hiện nhiều dòng chữ trong lúc cài đặt là bình thường — <b>đừng đóng nó</b> khi đang dùng app. Trong trường hợp rất hiếm ứng dụng không tự cài được Python, hãy cài Python 3.11 tại <code>python.org</code> (nhớ tick “Add to PATH”) rồi chạy lại <code>start.bat</code>.</div>
+
+      <h3>3. Mở ứng dụng</h3>
+      <ol>
+        <li>Nhấp đúp <code>start.bat</code>.</li>
+        <li>Sau vài giây, trình duyệt tự mở trang ứng dụng tại <code>http://127.0.0.1:8765</code>. Nếu không tự mở, hãy gõ địa chỉ đó vào trình duyệt.</li>
+        <li>Muốn tắt ứng dụng: đóng cửa sổ nền đen.</li>
+      </ol>
+
+      <h3>4. Cách sao chép link YouTube</h3>
+      <ol>
+        <li>Mở video trên <b>youtube.com</b>.</li>
+        <li>Bấm nút <b>Chia sẻ</b> (Share) bên dưới video, rồi bấm <b>Sao chép</b> (Copy). Hoặc bôi đen địa chỉ trên thanh trình duyệt và nhấn Ctrl+C.</li>
+        <li>Quay lại Storyframe, nhấp vào ô link và nhấn Ctrl+V để dán.</li>
+      </ol>
+      <div class="callout">Link hợp lệ trông giống: <code>https://www.youtube.com/watch?v=XXXXXXXXXXX</code> hoặc <code>https://youtu.be/XXXXXXXXXXX</code></div>
+
+      <h3>5. Xử lý một video</h3>
+      <ol>
+        <li>Dán link vào ô <b>“Dán link YouTube vào đây”</b>, hoặc bấm <b>“Chọn file”</b> để chọn video có sẵn trên máy.</li>
+        <li>Chọn mục <b>“Chữ truyện trên màn hình?”</b>:
+          <ul>
+            <li><b>Video CÓ chữ trên màn hình</b> — dùng cho video đã hiện sẵn chữ truyện (mặc định).</li>
+            <li><b>Video KHÔNG có chữ</b> — app sẽ nghe giọng đọc và tự vẽ phụ đề lên ảnh.</li>
+            <li><b>Không chắc</b> — để app tự phát hiện.</li>
+          </ul>
+        </li>
+        <li><b>Chế độ nhanh</b> (nên bật): tận dụng phụ đề sẵn có của YouTube và bộ nhớ đệm để chạy nhanh hơn.</li>
+        <li>Bấm <b>“Bắt đầu xử lý”</b>.</li>
+      </ol>
+
+      <h3>6. Theo dõi tiến độ</h3>
+      <p>Mỗi video hiển thị thanh tiến độ đi qua các bước: <i>Đang tải video → Nhận diện trang sách → Nghe lời đọc (AI) → Quét chữ trên hình (AI) → Chọn trang đẹp nhất → Đóng gói PDF/MP3</i>.</p>
+      <div class="callout warn">⏱️ Bước quét chữ có thể lâu: một video 8 phút có thể mất <b>15–40 phút</b> tùy máy. Đây là điều bình thường — cứ để chạy và nhìn thanh tiến độ. Muốn dừng giữa chừng, bấm <b>“Hủy”</b>.</div>
+
+      <h3>7. Xem và tải kết quả</h3>
+      <p>Khi xong (nhãn <b>“Hoàn tất”</b> màu xanh), nhấp vào dự án để mở ra và:</p>
+      <ul>
+        <li>Nghe thử <b>MP3</b> ngay trên trang.</li>
+        <li>Bấm <b>“Mở PDF”</b> để xem sách truyện.</li>
+        <li>Bấm <b>“Tải MP3”</b> để lưu file nghe về máy.</li>
+      </ul>
+
+      <h3>8. Chỉnh sửa các trang</h3>
+      <ul>
+        <li>Trang có <b>viền cam + nhãn “cần xem lại”</b> là trang app chưa chắc chắn — bạn nên kiểm tra.</li>
+        <li>Nhấp vào ảnh để <b>phóng to</b> xem rõ.</li>
+        <li>Tích chọn các trang thừa hoặc xấu, rồi bấm <b>“Bỏ … trang &amp; tạo lại PDF”</b>. PDF được tạo lại trong vài giây.</li>
+        <li>Đổi ý? Trang đã bỏ nằm ở mục <b>“Trang đã bỏ”</b> phía dưới — tích chọn và bấm <b>“Khôi phục”</b>.</li>
+      </ul>
+
+      <h3>9. Xóa dự án</h3>
+      <p>Bấm nút <b>🗑</b> ở góc phải mỗi dự án (hoặc mở dự án và bấm <b>“Xóa dự án”</b>) để xóa hẳn dự án cùng toàn bộ ảnh, PDF và MP3 khỏi máy.</p>
+      <div class="callout warn">⚠️ Thao tác xóa <b>không thể khôi phục</b>. Hãy tải PDF/MP3 về trước nếu bạn muốn giữ.</div>
+
+      <h3>10. Xử lý sự cố thường gặp</h3>
+      <ul>
+        <li><b>YouTube báo “video không tồn tại” dù link đúng:</b> thường do thiếu công cụ <code>deno</code>. Chạy lại <code>start.bat</code> để cài, hoặc dùng lệnh <code>winget install DenoLand.Deno</code>.</li>
+        <li><b>YouTube đòi đăng nhập:</b> mở <b>“Cài đặt nâng cao”</b> → chọn trình duyệt bạn đang đăng nhập YouTube (Chrome/Edge/Firefox) để app mượn cookies.</li>
+        <li><b>Không tìm thấy chữ truyện:</b> thử lại và chọn <b>“Video KHÔNG có chữ”</b>.</li>
+        <li><b>Cần hỗ trợ kỹ thuật:</b> mở dự án và bấm <b>“Xem nhật ký kỹ thuật”</b> để xem chi tiết.</li>
+      </ul>
+
+      <div class="callout">© Chỉ xử lý video mà bạn có quyền tải và sử dụng.</div>
+    </div>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

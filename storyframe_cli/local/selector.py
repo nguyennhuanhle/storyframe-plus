@@ -9,6 +9,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
+from .fonts import load_scaled_font
 from .media import extract_frame, scan_fps, timestamps_for_window, video_fingerprint
 from .models import FrameObservation, OcrBox, PageInterval, SelectedFrame, TranscriptUnit
 from .ocr import build_ocr_backend
@@ -1192,17 +1193,8 @@ def distribute_tokens_to_lines(tokens: list[str], line_groups: list[list[OcrBox]
 
 def load_reconstruction_font(line_groups: list[list[OcrBox]]) -> ImageFont.ImageFont:
     heights = [box.height for group in line_groups for box in group]
-    size = int(max(28, min(44, (sum(heights) / max(1, len(heights))) * 0.86)))
-    for font_path in [
-        "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
-        "/System/Library/Fonts/Supplemental/Arial.ttf",
-        "/Library/Fonts/Arial Bold.ttf",
-    ]:
-        try:
-            return ImageFont.truetype(font_path, size=size)
-        except OSError:
-            continue
-    return ImageFont.load_default()
+    size = int(max(28, min(48, (sum(heights) / max(1, len(heights))) * 0.86)))
+    return load_scaled_font(size)
 
 
 def format_reconstructed_line(tokens: list[str]) -> str:
@@ -1367,7 +1359,7 @@ def write_contact_sheet(output_dir: Path, rows: list[dict[str, str]]) -> None:
         (245, 245, 245),
     )
     draw = ImageDraw.Draw(sheet)
-    font = ImageFont.load_default()
+    font = load_scaled_font(15)
     for item_index, row in enumerate(rows):
         grid_y, grid_x = divmod(item_index, columns)
         x = padding + grid_x * (thumb_width + padding)

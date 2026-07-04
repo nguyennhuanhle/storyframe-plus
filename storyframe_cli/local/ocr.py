@@ -105,12 +105,15 @@ def tesseract_fallback_boxes(frame_path: Path, page_width: int, page_height: int
         return []
 
     image = Image.open(frame_path).convert("RGB")
-    data = pytesseract.image_to_data(
-        image,
-        lang="eng",
-        config="--psm 11",
-        output_type=pytesseract.Output.DICT,
-    )
+    try:
+        data = pytesseract.image_to_data(
+            image,
+            lang="eng",
+            config="--psm 11",
+            output_type=pytesseract.Output.DICT,
+        )
+    except Exception:
+        return []
     boxes: list[OcrBox] = []
     for index, text in enumerate(data.get("text", [])):
         cleaned = clean_text(str(text))

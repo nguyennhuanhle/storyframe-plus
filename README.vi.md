@@ -1,12 +1,18 @@
-# Storyframe CLI
+# Storyframe Plus
 
 [English](README.md)
 
-Trích xuất frame có chữ truyện sạch từ video read-aloud, xuất audio truyện
-thành MP3, và đóng gói các ảnh đã chọn thành PDF.
+Biến video đọc truyện thành một **sách PDF** và một file **MP3** giọng đọc —
+mọi thứ chạy ngay trên máy của bạn. Storyframe Plus trích xuất các frame có chữ
+truyện sạch từ video, xuất audio giọng đọc thành MP3, và đóng gói các ảnh đã
+chọn thành PDF.
+
+> Đây là bản fork của [storyframe-cli](https://github.com/thieung/storyframe-cli),
+> bổ sung một **giao diện web** thân thiện cho người dùng không rành kỹ thuật,
+> hỗ trợ **Windows** đầy đủ, file khởi chạy một-cú-nhấp, và nhiều sửa lỗi ổn định.
 
 <p align="center">
-  <img src="docs/assets/storyframe-cli-overview.png" alt="Tổng quan Storyframe CLI" width="720">
+  <img src="docs/assets/storyframe-cli-overview.png" alt="Tổng quan Storyframe" width="720">
 </p>
 
 Hỗ trợ:
@@ -15,50 +21,88 @@ Hỗ trợ:
 - một file video local
 - folder chứa nhiều video
 
-## Platforms
+## Nền tảng
 
-| Platform | Trạng thái |
+| Nền tảng | Trạng thái |
 | --- | --- |
+| Windows | Hỗ trợ. Nhấp đúp `start.bat` để cài đặt một-cú-nhấp. |
 | macOS | Hỗ trợ và đã test. |
 | Linux | Hỗ trợ nếu đã cài system packages. |
-| Windows | Chưa test trực tiếp; nên dùng WSL2/Linux. |
 
-## Cài Đặt
+## Bắt đầu nhanh (Windows)
 
-System packages trên macOS:
+1. Tải repo này về (nút **Code** màu xanh → **Download ZIP**, rồi giải nén),
+   hoặc clone về.
+2. Nhấp đúp vào **`start.bat`**.
+3. Chờ quá trình cài đặt lần đầu hoàn tất — ứng dụng sẽ tự mở trong trình duyệt.
+
+Lần chạy đầu tiên, launcher **tự động cài mọi thứ cần thiết** — Python (nếu máy
+chưa có), các thư viện Python, `ffmpeg`, và `deno` (dùng để tải YouTube) — thông
+qua `winget`. Chạy lại `start.bat` bất cứ lúc nào để mở app; thêm `-Update` để
+cập nhật thư viện. Model AI nghe giọng nói (~0.5&nbsp;GB) sẽ tải về ở lần xử lý
+video đầu tiên.
+
+## Cài đặt thủ công (mọi nền tảng)
+
+Công cụ hệ thống:
 
 ```bash
-brew install ffmpeg tesseract
+# Windows
+winget install Gyan.FFmpeg DenoLand.Deno
+# macOS
+brew install ffmpeg
+# Linux
+sudo apt-get install ffmpeg
 ```
 
-System packages trên Linux:
+`ffmpeg` là bắt buộc. `deno` (hoặc một JS runtime khác cho yt-dlp) là bắt buộc
+để tải video YouTube. `tesseract` là tùy chọn — chỉ dùng làm OCR dự phòng.
+
+Clone và cài Python package:
 
 ```bash
-sudo apt-get install ffmpeg tesseract-ocr
-```
-
-Clone repo và cài Python package:
-
-```bash
-git clone https://github.com/thieung/storyframe-cli.git
-cd storyframe-cli
+git clone https://github.com/nguyennhuanhle/storyframe-plus.git
+cd storyframe-plus
 python3 -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
 python -m pip install -U pip
-python -m pip install -e ".[local]"
+python -m pip install -e ".[local,gui]"
 ```
 
 Cần Python 3.11+.
 
-Python dependencies được cài bởi `.[local]`:
+Python dependencies:
 
 - base: `liteparse`, `numpy`, `opencv-python-headless`, `pillow`, `yt-dlp`
-- local pipeline: `faster-whisper`, `imagehash`, `pytesseract`, `rapidocr`,
-  `rapidfuzz`, `scenedetect`, `scikit-image`
+- local pipeline (`local`): `faster-whisper`, `imagehash`, `pytesseract`,
+  `rapidocr`, `rapidfuzz`, `scenedetect`, `scikit-image`
+- web GUI (`gui`): `fastapi`, `uvicorn`, `python-multipart`
 
 `faster-whisper` sẽ download ASR model được chọn ở lần chạy đầu tiên.
 
-## Cách Dùng
+## Giao diện web
+
+Khởi động giao diện web local:
+
+```bash
+storyframe gui
+```
+
+Trình duyệt sẽ mở tại `http://127.0.0.1:8765`. Tại đây bạn có thể:
+
+- Dán link YouTube hoặc chọn file video, rồi bắt đầu xử lý.
+- Xem tiến độ theo từng giai đoạn dễ hiểu, và hủy công việc đang chạy.
+- Nghe MP3, sau đó mở hoặc tải PDF khi xong.
+- Duyệt lại các trang: trang bị đánh dấu **cần xem lại** có viền cam; bỏ hoặc
+  khôi phục trang và tạo lại PDF trong vài giây.
+- Xóa một dự án (xóa luôn file khỏi máy).
+- Mở phần **Hướng dẫn sử dụng** có sẵn.
+
+Mọi thứ chạy local; công việc và kết quả được lưu trong
+`outputs/storyframe-runs`. Giao diện bằng tiếng Việt, hướng đến người dùng không
+rành kỹ thuật.
+
+## Dòng lệnh
 
 YouTube:
 
@@ -219,4 +263,5 @@ storyframe run --advanced-help
 ```bash
 python3 -m unittest discover -s tests
 python3 -m storyframe_cli run "https://www.youtube.com/watch?v=VIDEO_ID"
+python3 -m storyframe_cli gui
 ```

@@ -8,6 +8,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
+from .fonts import load_scaled_font
 from .media import extract_frame
 from .models import FrameObservation, SelectedFrame, TranscriptUnit
 from .ocr import build_ocr_backend
@@ -270,19 +271,8 @@ def render_caption_if_needed(image_path: Path, item: SelectedFrame) -> bool:
 def load_caption_font(image_size: tuple[int, int], caption: str) -> ImageFont.ImageFont:
     _width, height = image_size
     words = len(clean_text(caption).split())
-    size = int(max(26, min(54, height * (0.056 if words <= 10 else 0.045))))
-    for font_path in [
-        "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
-        "/System/Library/Fonts/Supplemental/Arial.ttf",
-        "/Library/Fonts/Arial Bold.ttf",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
-    ]:
-        try:
-            return ImageFont.truetype(font_path, size=size)
-        except OSError:
-            continue
-    return ImageFont.load_default()
+    size = int(max(30, min(64, height * (0.062 if words <= 10 else 0.050))))
+    return load_scaled_font(size)
 
 
 def wrap_caption_lines(

@@ -38,6 +38,9 @@ storyframe-youtube-cache/
 .idea/
 .vscode/
 
+# Local agent/editor tooling
+.claude/
+
 # Secrets
 .env
 .env.*
