@@ -530,6 +530,7 @@ class JobManager:
             encoding="utf-8",
             errors="replace",
             env=env,
+            creationflags=cli.no_window_creationflags(),
         )
         with self.lock:
             self._proc = proc
@@ -592,6 +593,7 @@ class JobManager:
             subprocess.run(
                 ["taskkill", "/F", "/T", "/PID", str(proc.pid)],
                 capture_output=True,
+                creationflags=cli.no_window_creationflags(),
             )
         else:
             proc.terminate()

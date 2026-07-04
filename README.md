@@ -14,6 +14,16 @@ Turn a read-aloud story video into a <b>PDF picture book</b> and an <b>MP3</b> o
 
 <p align="center"><sub>Each block shows English first, then <i>Tiếng Việt</i> underneath · Mỗi đoạn có tiếng Anh trước, rồi <i>tiếng Việt</i> ở dưới</sub></p>
 
+<p align="center">
+  <a href="https://github.com/nguyennhuanhle/storyframe-plus/releases/latest"><b>⬇ Download the installer</b></a>
+  · <a href="https://github.com/nguyennhuanhle/storyframe-plus/releases/latest"><b>Tải bản cài đặt</b></a>
+</p>
+
+<p align="center"><sub>
+No Git, no setup — download <code>StoryframeSetup.exe</code> from Releases and run it.<br>
+<i>Không cần Git, không cần cài lằng nhằng — tải <code>StoryframeSetup.exe</code> từ Releases rồi chạy.</i>
+</sub></p>
+
 ---
 
 ## What it does · Ứng dụng làm gì?
