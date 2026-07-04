@@ -22,32 +22,25 @@ MAX_LOG_LINES = 400
 STAGE_ORDER = ["download", "prepare", "pages", "listen", "scan", "select", "package"]
 
 
-def friendly_error(raw: str) -> str:
+def classify_error(raw: str) -> str:
+    """Map a raw error to a stable code the frontend localizes (or '' = generic)."""
     lower = raw.lower()
     if "this video is not available" in lower or "video unavailable" in lower:
-        return (
-            "Video không tồn tại, đã bị xóa hoặc bị chặn ở khu vực của bạn. "
-            "Hãy kiểm tra lại đường link."
-        )
-    if "sign in" in lower or "login required" in lower or "age" in lower and "confirm" in lower:
-        return (
-            "YouTube yêu cầu đăng nhập để xem video này. "
-            "Mở phần Cài đặt nâng cao và chọn trình duyệt để lấy cookies."
-        )
+        return "video_unavailable"
+    if "sign in" in lower or "login required" in lower or ("age" in lower and "confirm" in lower):
+        return "login_required"
     if "selected no frames" in lower or "no ocr observations" in lower:
-        return (
-            "Không tìm thấy chữ truyện trên màn hình video. "
-            "Hãy thử lại và chọn 'Video KHÔNG có chữ trên màn hình'."
-        )
+        return "no_frames"
     if "no asr transcript units" in lower:
-        return (
-            "Không nghe được lời đọc trong video nên không thể tạo phụ đề. "
-            "Video có thể không có tiếng nói."
-        )
+        return "no_audio"
     if "ffmpeg" in lower and ("not found" in lower or "missing" in lower):
-        return "Thiếu ffmpeg trên máy. Cài bằng lệnh: winget install Gyan.FFmpeg"
-    tail = raw.strip().splitlines()[-1] if raw.strip() else "Lỗi không xác định."
-    return f"Xử lý thất bại: {tail[:300]}"
+        return "ffmpeg_missing"
+    return ""
+
+
+def short_error_tail(raw: str) -> str:
+    lines = [line for line in raw.strip().splitlines() if line.strip()]
+    return lines[-1][:300] if lines else ""
 
 
 @dataclass
@@ -63,6 +56,9 @@ class Job:
     detail: str = ""
     output_dir: str = ""
     error: str = ""
+    error_code: str = ""
+    scan_done: int = 0
+    scan_total: int = 0
     frame_count: int = 0
     mp3: str = ""
     pdf: str = ""
@@ -83,6 +79,9 @@ class Job:
             "detail": self.detail,
             "output_dir": self.output_dir,
             "error": self.error,
+            "error_code": self.error_code,
+            "scan_done": self.scan_done,
+            "scan_total": self.scan_total,
             "frame_count": self.frame_count,
             "has_mp3": bool(self.mp3),
             "has_pdf": bool(self.pdf),
@@ -145,6 +144,7 @@ class JobManager:
                 detail=item.get("detail", ""),
                 output_dir=item.get("output_dir", ""),
                 error=item.get("error", ""),
+                error_code=item.get("error_code", ""),
                 frame_count=item.get("frame_count", 0),
                 mp3=item.get("mp3", ""),
                 pdf=item.get("pdf", ""),
@@ -152,7 +152,7 @@ class JobManager:
             )
             if job.status in {"queued", "running"}:
                 job.status = "failed"
-                job.error = "Phiên làm việc trước bị gián đoạn. Hãy chạy lại."
+                job.error_code = "interrupted"
             self.jobs[job.id] = job
             self.order.append(job.id)
 
@@ -181,6 +181,7 @@ class JobManager:
             "deno": shutil.which("deno") is not None or shutil.which("node") is not None,
             "tesseract": shutil.which("tesseract") is not None,
             "output_root": str(self.output_root),
+            "desktop": os.environ.get("STORYFRAME_DESKTOP") == "1",
         }
 
     def list_jobs(self) -> list[dict]:
@@ -201,12 +202,12 @@ class JobManager:
                 for video in cli.iter_video_files(path, recursive=True):
                     sources.append((str(video), video.stem))
                 if not sources:
-                    raise ValueError("Thư mục này không có file video nào.")
+                    raise ValueError("This folder has no video files.")
             elif path.is_file() and path.suffix.lower() in cli.VIDEO_EXTENSIONS:
                 sources.append((str(path), path.stem))
             else:
                 raise ValueError(
-                    "Nguồn không hợp lệ. Hãy dán link YouTube hoặc chọn file video."
+                    "Invalid source. Paste a YouTube link or choose a video file."
                 )
 
         created = []
@@ -272,7 +273,7 @@ class JobManager:
         suffix = Path(filename).suffix.lower()
         if suffix not in cli.VIDEO_EXTENSIONS:
             raise ValueError(
-                "Định dạng file không được hỗ trợ. Hãy chọn file video (mp4, mkv, mov...)."
+                "Unsupported file type. Choose a video file (mp4, mkv, mov...)."
             )
         stem = cli.slugify(Path(filename).stem)
         target = self.upload_dir / f"{stem}-{uuid.uuid4().hex[:6]}{suffix}"
@@ -370,7 +371,8 @@ class JobManager:
                     job.detail = ""
                 else:
                     job.status = "failed"
-                    job.error = friendly_error(str(exc))
+                    job.error_code = classify_error(str(exc))
+                    job.error = short_error_tail(str(exc))
                 job.finished_at = time.time()
             finally:
                 self._save_state()
@@ -404,7 +406,7 @@ class JobManager:
         else:
             video_path = Path(job.source)
             if not video_path.is_file():
-                raise RuntimeError(f"File video không tồn tại: {video_path}")
+                raise RuntimeError(f"Video file not found: {video_path}")
             if args.speed == "auto":
                 subtitle_path = cli.find_caption_for_video_path(video_path)
 
@@ -526,6 +528,7 @@ class JobManager:
             cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
+            stdin=subprocess.DEVNULL,
             text=True,
             encoding="utf-8",
             errors="replace",
@@ -564,7 +567,8 @@ class JobManager:
             done, total = int(match.group(1)), int(match.group(2))
             job.stage = "scan"
             job.stage_progress = done / total if total else None
-            job.detail = f"Đã quét {done}/{total} khung hình"
+            job.scan_done = done
+            job.scan_total = total
             return
         if line.startswith("local: detecting scene"):
             job.stage = "pages"

@@ -83,8 +83,11 @@ h1 {
   font-weight: 600;
 }
 
-.header-actions { margin-top: 16px; }
-.guide-btn {
+.header-actions {
+  margin-top: 16px;
+  display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+}
+.guide-btn, .lang-btn {
   display: inline-flex; align-items: center; gap: 8px;
   padding: 11px 22px;
   border-radius: 999px;
@@ -95,7 +98,8 @@ h1 {
   box-shadow: 0 6px 16px rgba(80, 110, 150, .18);
   border: 2px solid #fff;
 }
-.guide-btn:hover { background: var(--purple-soft); }
+.guide-btn:hover, .lang-btn:hover { background: var(--purple-soft); }
+.lang-btn { background: rgba(255,255,255,.85); color: var(--accent-dark); }
 
 #system-banner {
   display: inline-block;

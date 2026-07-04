@@ -31,7 +31,7 @@ ArchitecturesInstallIn64BitMode=x64compatible
 ArchitecturesAllowed=x64compatible
 
 [Tasks]
-Name: "desktopicon"; Description: "Tao shortcut ngoai Desktop"; GroupDescription: "Shortcut:"
+Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription: "Shortcuts:"
 
 [Files]
 Source: "{#StagingDir}\*"; DestDir: "{app}"; Flags: recursesubdirs createallsubdirs ignoreversion
@@ -41,8 +41,8 @@ Name: "{autoprograms}\Storyframe"; Filename: "{app}\python\pythonw.exe"; Paramet
 Name: "{autodesktop}\Storyframe"; Filename: "{app}\python\pythonw.exe"; Parameters: """{app}\storyframe_app.pyw"""; WorkingDir: "{app}"; IconFilename: "{app}\storyframe.ico"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\webview2setup.exe"; Parameters: "/silent /install"; StatusMsg: "Dang kiem tra WebView2..."; Flags: waituntilterminated skipifdoesntexist
-Filename: "{app}\python\pythonw.exe"; Parameters: """{app}\storyframe_app.pyw"""; WorkingDir: "{app}"; Description: "Khoi dong Storyframe ngay"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\webview2setup.exe"; Parameters: "/silent /install"; StatusMsg: "Checking WebView2..."; Flags: waituntilterminated skipifdoesntexist
+Filename: "{app}\python\pythonw.exe"; Parameters: """{app}\storyframe_app.pyw"""; WorkingDir: "{app}"; Description: "Launch Storyframe now"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}"

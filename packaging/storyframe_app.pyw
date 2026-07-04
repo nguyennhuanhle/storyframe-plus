@@ -15,6 +15,7 @@ os.environ["PATH"] = str(bin_dir) + os.pathsep + os.environ.get("PATH", "")
 os.environ.setdefault("PYTHONUTF8", "1")
 os.environ.setdefault("PYTHONUNBUFFERED", "1")
 os.environ.setdefault("HF_HUB_DISABLE_SYMLINKS_WARNING", "1")
+os.environ["STORYFRAME_NO_CONSOLE"] = "1"
 
 try:
     from storyframe_cli.gui.desktop import main
@@ -34,8 +35,7 @@ except Exception:
 
         ctypes.windll.user32.MessageBoxW(
             None,
-            "Storyframe khong khoi dong duoc.\n\nChi tiet da luu vao:\n"
-            + str(log),
+            "Storyframe could not start.\n\nDetails were saved to:\n" + str(log),
             "Storyframe",
             0x10,
         )

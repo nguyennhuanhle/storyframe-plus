@@ -34,7 +34,7 @@ def create_app(output_root: Path) -> FastAPI:
     def require_job(job_id: str):
         job = manager.get_job(job_id)
         if job is None:
-            raise HTTPException(status_code=404, detail="Không tìm thấy công việc này.")
+            raise HTTPException(status_code=404, detail="Job not found.")
         return job
 
     @app.get("/api/system")
@@ -50,10 +50,10 @@ def create_app(output_root: Path) -> FastAPI:
         source = request.source.strip().strip('"')
         if not source:
             raise HTTPException(
-                status_code=400, detail="Hãy dán link YouTube hoặc chọn file video."
+                status_code=400, detail="Paste a YouTube link or choose a video file."
             )
         if request.caption_mode not in {"off", "auto", "force"}:
-            raise HTTPException(status_code=400, detail="Chế độ phụ đề không hợp lệ.")
+            raise HTTPException(status_code=400, detail="Invalid caption mode.")
         options = {
             "caption_mode": request.caption_mode,
             "fast": request.fast,
@@ -73,14 +73,14 @@ def create_app(output_root: Path) -> FastAPI:
     def cancel_job(job_id: str) -> dict:
         require_job(job_id)
         if not manager.cancel(job_id):
-            raise HTTPException(status_code=409, detail="Không thể hủy công việc này.")
+            raise HTTPException(status_code=409, detail="Cannot cancel this job.")
         return {"ok": True}
 
     @app.post("/api/jobs/{job_id}/retry")
     def retry_job(job_id: str) -> list[dict]:
         job = require_job(job_id)
         if job.status in {"queued", "running"}:
-            raise HTTPException(status_code=409, detail="Công việc vẫn đang chạy.")
+            raise HTTPException(status_code=409, detail="The job is still running.")
         return manager.submit(job.source, job.options)
 
     @app.delete("/api/jobs/{job_id}")
@@ -88,7 +88,7 @@ def create_app(output_root: Path) -> FastAPI:
         require_job(job_id)
         if not manager.remove_record(job_id, delete_files=purge):
             raise HTTPException(
-                status_code=409, detail="Không thể xóa khi công việc đang chạy."
+                status_code=409, detail="Cannot delete while the job is running."
             )
         return {"ok": True}
 
@@ -118,17 +118,17 @@ def create_app(output_root: Path) -> FastAPI:
             frames = sorted(Path(job.output_dir, "frames").glob("*.jpg"))
             if frames:
                 return FileResponse(frames[0])
-        raise HTTPException(status_code=404, detail="Chưa có ảnh.")
+        raise HTTPException(status_code=404, detail="No image yet.")
 
     @app.get("/api/jobs/{job_id}/file/{relpath:path}")
     def job_file(job_id: str, relpath: str):
         job = require_job(job_id)
         if not job.output_dir:
-            raise HTTPException(status_code=404, detail="Chưa có kết quả.")
+            raise HTTPException(status_code=404, detail="No result yet.")
         base = Path(job.output_dir).resolve()
         target = (base / relpath).resolve()
         if not target.is_relative_to(base) or not target.is_file():
-            raise HTTPException(status_code=404, detail="Không tìm thấy file.")
+            raise HTTPException(status_code=404, detail="File not found.")
         return FileResponse(target)
 
     @app.post("/api/upload")

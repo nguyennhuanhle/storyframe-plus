@@ -6,9 +6,18 @@ import math
 import subprocess
 from pathlib import Path
 
+from ..proc import no_window_creationflags
+
 
 def run_command(cmd: list[str]) -> subprocess.CompletedProcess[str]:
-    proc = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    proc = subprocess.run(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        stdin=subprocess.DEVNULL,
+        text=True,
+        creationflags=no_window_creationflags(),
+    )
     if proc.returncode != 0:
         raise RuntimeError(
             "Command failed:\n"

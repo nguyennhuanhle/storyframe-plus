@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "storyframe-plus"
-version = "0.3.0"
+version = "0.3.1"
 description = "Extract story transcript frames, audio MP3, and image PDF from local videos or YouTube URLs, via a CLI or a local web GUI."
 readme = "README.md"
 requires-python = ">=3.11"

@@ -12,6 +12,8 @@ from urllib.parse import parse_qs, urlparse
 
 from PIL import Image
 
+from .proc import no_window_creationflags
+
 
 VIDEO_EXTENSIONS = {
     ".avi",
@@ -326,31 +328,13 @@ def fail(message: str) -> None:
     raise SystemExit(1)
 
 
-def no_window_creationflags() -> int:
-    """Return CREATE_NO_WINDOW only when running without a console.
-
-    Inert for normal CLI use (a terminal always has a console). It only kicks in
-    for the packaged desktop app launched via pythonw.exe, where it stops child
-    processes (ffmpeg, yt-dlp, the engine) from flashing their own console.
-    """
-    if sys.platform != "win32":
-        return 0
-    try:
-        import ctypes
-
-        if ctypes.windll.kernel32.GetConsoleWindow() == 0:
-            return subprocess.CREATE_NO_WINDOW
-    except Exception:
-        pass
-    return 0
-
-
 def run_command(cmd: list[str], cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
     proc = subprocess.run(
         cmd,
         cwd=cwd,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
+        stdin=subprocess.DEVNULL,
         text=True,
         creationflags=no_window_creationflags(),
     )

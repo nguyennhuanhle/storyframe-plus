@@ -6,6 +6,7 @@ instead of a browser tab. It does not change any CLI or server behavior.
 """
 from __future__ import annotations
 
+import os
 import socket
 import threading
 import time
@@ -14,6 +15,12 @@ from pathlib import Path
 import uvicorn
 
 from .server import create_app
+
+# Runs under pythonw (no console); tell child processes (ffmpeg, the engine and
+# its own ffmpeg calls) to launch with no console window. Set before any job
+# starts so it is inherited by the engine subprocess environment.
+os.environ["STORYFRAME_NO_CONSOLE"] = "1"
+os.environ["STORYFRAME_DESKTOP"] = "1"
 
 
 def default_output_root() -> Path:
