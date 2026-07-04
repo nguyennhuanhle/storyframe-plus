@@ -8,6 +8,9 @@ version = "0.3.1"
 description = "Extract story transcript frames, audio MP3, and image PDF from local videos or YouTube URLs, via a CLI or a local web GUI."
 readme = "README.md"
 requires-python = ">=3.11"
+classifiers = [
+  "License :: OSI Approved :: MIT License",
+]
 dependencies = [
   "liteparse",
   "numpy>=1.26",
